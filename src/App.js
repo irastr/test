@@ -1,12 +1,30 @@
 import React, { Component } from "react";
 import "./App.css";
-import data from "./trading-hours";
+// import data from "./trading-hours";
 import TableRow from "./TableRow";
 
 class App extends Component {
   state = {
-    data: data,
+    data: [],
     isChecked: false
+  };
+
+  componentDidMount() {
+    fetch("/trading-hours.json")
+      .then(response => response.json())
+      .then(data => {
+        this.setState({
+          data
+        });
+      });
+  }
+
+  getData = () => {
+    return this.state.isChecked
+      ? this.state.data.filter(instrument =>
+          this.findOpenInstrument(instrument)
+        )
+      : this.state.data;
   };
 
   findOpenInstrument = instrument => {
@@ -18,33 +36,14 @@ class App extends Component {
     });
   };
 
-  updateData = () => {
-    const newData = data.filter(instrument => {
-      return this.findOpenInstrument(instrument);
-    });
-    this.setState({
-      data: newData
-    });
-  };
-
   toggleCheckboxChange = () => {
-    this.setState(
-      prevState => ({
-        isChecked: !prevState.isChecked
-      }),
-      () => {
-        if (this.state.isChecked) {
-          this.updateData();
-        } else {
-          this.setState({
-            data: data
-          });
-        }
-      }
-    );
+    this.setState(prevState => ({
+      isChecked: !prevState.isChecked
+    }));
   };
 
   render() {
+    const dataWithFilter = this.getData();
     return (
       <div className="App">
         <label>
@@ -61,7 +60,7 @@ class App extends Component {
             <th>Name</th>
             <th>Open/Close</th>
           </tr>
-          {this.state.data.map((instrument, index) => {
+          {dataWithFilter.map((instrument, index) => {
             return (
               <TableRow
                 instrument={instrument}
